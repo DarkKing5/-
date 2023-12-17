@@ -1,0 +1,229 @@
+import sqlite3
+from tkinter import *
+from tkinter import messagebox
+
+class DB:
+    def __init__(self, db_path="mybooks.db"):
+        self.db_path = db_path
+        self.conn = sqlite3.connect(self.db_path)
+        self.cur = self.conn.cursor()
+        self.table_name = "buy"
+
+        # таблица с данными
+        self.cur.execute(f'''
+            CREATE TABLE IF NOT EXISTS {self.table_name} (
+                id INTEGER PRIMARY KEY,
+                product TEXT,
+                price TEXT,
+                comment TEXT
+            )
+        ''')
+        self.conn.commit()
+
+    def view(self):
+        self.cur.execute(f"SELECT * FROM {self.table_name}")
+        rows = self.cur.fetchall()
+        return rows
+
+    def insert(self, product, price, comment):
+        self.cur.execute(f"INSERT INTO {self.table_name} VALUES (NULL,?,?,?)", (product, price, comment))
+        self.conn.commit()
+
+    def update(self, id, product, price):
+        self.cur.execute(f"UPDATE {self.table_name} SET product=?, price=? WHERE id=?", (product, price, id))
+        self.conn.commit()
+
+    def delete(self, id):
+        self.cur.execute(f"DELETE FROM {self.table_name} WHERE id=?", (id,))
+        self.conn.commit()
+
+    def search(self, product="", price=""):
+        self.cur.execute(f"SELECT * FROM {self.table_name} WHERE product=?", (product,))
+        rows = self.cur.fetchall()
+        return rows
+
+
+db = DB()
+
+
+
+def get_selected_row(event): 
+    global selected_tuple
+    index = list1.curselection()[0] 
+    selected_tuple = list1.get(index) 
+    e1.delete(0, END)                
+    e1.insert(END, selected_tuple[1]) 
+    e2.delete(0, END)
+    e2.insert(END, selected_tuple[2]) 
+    e3.delete(0, END)
+    e3.insert(END, selected_tuple[3]) 
+
+def view_command():         
+    list1.delete(0, END)    
+    for row in db.view():   
+        list1.insert(END, row)  
+
+def search_command():       
+    list1.delete(0, END)   
+    for row in db.search(product_text.get()):
+        list1.insert(END, row) 
+
+def add_command():         
+    db.insert(product_text.get(), price_text.get(), comment_text.get()) 
+    view_command()
+
+def delete_command(): 
+    db.delete(selected_tuple[0]) 
+    view_command()
+
+def update_command():
+    db.update(selected_tuple[0], product_text.get(), price_text.get()) 
+    view_command()
+
+
+
+class DB:
+    def __init__(self):
+        self.conn = sqlite3.connect("mybooks.db")
+        self.cur = self.conn.cursor()
+        self.cur.execute("CREATE TABLE IF NOT EXISTS buy (id INTEGER PRIMARY KEY, product TEXT, price TEXT, comment TEXT)")
+        self.conn.commit()
+
+    def __del__(self):
+        self.conn.close()
+
+    def view(self):
+        self.cur.execute("SELECT * FROM buy")
+        rows = self.cur.fetchall()
+        return rows
+
+    def insert(self, product, price, comment):
+        self.cur.execute("INSERT INTO buy VALUES (NULL,?,?,?)", (product, price, comment,))
+        self.conn.commit()
+
+    def update(self, id, product, price):
+        self.cur.execute("UPDATE buy SET product=?, price=? WHERE id=?", (product, price, id,))
+        self.conn.commit()
+
+    def delete(self, id):
+        self.cur.execute("DELETE FROM buy WHERE id=?", (id,))
+        self.conn.commit()
+
+    def search(self, product="", price=""):
+        self.cur.execute("SELECT * FROM buy WHERE product=?", (product,))
+        rows = self.cur.fetchall()
+        return rows
+
+db = DB()
+
+def get_selected_row(event):
+    global selected_tuple
+    index = list1.curselection()[0]
+    selected_tuple = list1.get(index)
+    e1.delete(0, END)
+    e1.insert(END, selected_tuple[1])
+    e2.delete(0, END)
+    e2.insert(END, selected_tuple[2])
+    e3.delete(0, END)
+    e3.insert(END, selected_tuple[3])
+
+def view_command():
+    list1.delete(0, END)
+    for row in db.view():
+        list1.insert(END, row)
+
+def search_command():
+    list1.delete(0, END)
+    for row in db.search(product_text.get()):
+        list1.insert(END, row)
+
+def add_command():
+    db.insert(product_text.get(), price_text.get(), comment_text.get())
+    view_command()
+
+def delete_command():
+    db.delete(selected_tuple[0])
+    view_command()
+
+def update_command():
+    db.update(selected_tuple[0], product_text.get(), price_text.get())
+    view_command()
+
+window = Tk()
+window.title("Бюджет 0.1")
+
+def on_closing():
+    if messagebox.askokcancel("", "Закрыть программу?"):
+        window.destroy()
+
+window.protocol("WM_DELETE_WINDOW", on_closing)
+
+bg_color = "#e6e6e6"
+font_style = ("Helvetica", 12)
+
+window.configure(bg=bg_color)
+
+frame1 = Frame(window, bg=bg_color)
+frame1.grid(row=0, column=0, padx=10, pady=10)
+
+l1 = Label(frame1, text="Название", bg=bg_color, font=font_style)
+l1.grid(row=0, column=0, pady=(0, 5))
+
+product_text = StringVar()
+e1 = Entry(frame1, textvariable=product_text, font=font_style)
+e1.grid(row=0, column=1, padx=5, pady=(0, 5))
+
+l2 = Label(frame1, text="Стоимость", bg=bg_color, font=font_style)
+l2.grid(row=0, column=2, pady=(0, 5))
+
+price_text = StringVar()
+e2 = Entry(frame1, textvariable=price_text, font=font_style)
+e2.grid(row=0, column=3, padx=5, pady=(0, 5))
+
+l3 = Label(frame1, text="Комментарий", bg=bg_color, font=font_style)
+l3.grid(row=1, column=0, pady=(5, 0))
+
+comment_text = StringVar()
+e3 = Entry(frame1, textvariable=comment_text, font=font_style)
+e3.grid(row=1, column=1, columnspan=3, padx=5, pady=(5, 0))
+
+frame2 = Frame(window, bg=bg_color)
+frame2.grid(row=1, column=0, padx=10, pady=10)
+
+list1 = Listbox(frame2, height=15, width=50, font=font_style)
+list1.grid(row=0, column=0, rowspan=6, columnspan=2)
+
+sb1 = Scrollbar(frame2)
+sb1.grid(row=0, column=2, rowspan=6)
+
+list1.configure(yscrollcommand=sb1.set)
+sb1.configure(command=list1.yview)
+
+list1.bind('<<ListboxSelect>>', get_selected_row)
+
+frame3 = Frame(window, bg=bg_color)
+frame3.grid(row=0, column=1, rowspan=2)
+
+button_style = {"width": 12, "font": font_style, "bg": "#4CAF50", "fg": "white", "activebackground": "#45a049"}
+
+b1 = Button(frame3, text="Посмотреть все", command=view_command, **button_style)
+b1.grid(row=0, column=0, pady=5)
+
+b2 = Button(frame3, text="Поиск", command=search_command, **button_style)
+b2.grid(row=1, column=0, pady=5)
+
+b3 = Button(frame3, text="Добавить", command=add_command, **button_style)
+b3.grid(row=2, column=0, pady=5)
+
+b4 = Button(frame3, text="Обновить", command=update_command, **button_style)
+b4.grid(row=3, column=0, pady=5)
+
+b5 = Button(frame3, text="Удалить", command=delete_command, **button_style)
+b5.grid(row=4, column=0, pady=5)
+
+b6 = Button(frame3, text="Закрыть", command=on_closing, **button_style)
+b6.grid(row=5, column=0, pady=5)
+
+view_command()
+
+window.mainloop()
